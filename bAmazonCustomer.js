@@ -24,7 +24,7 @@ connection.connect(function (err) {
 // Then prompt to pick item
 function inventoryDisplay() {
     let display = new displayTable();
-    connection.query('SELECT item_id, product_name, department_name, price, stock_quantity from products;', function (err, results) {
+    connection.query('SELECT item_id, product_name, department_name, price from products;', function (err, results) {
         display.displayInvTable(results);
         startApp();
     });

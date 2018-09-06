@@ -1,47 +1,122 @@
+// Require NPM packages
 let inquirer = require('inquirer');
 let mysql = require('mysql');
+var Table = require('cli-table2');
 
-/* var connection = mysql.createConnection({
+// Import table constructor...
+var displayTable = require('./tableConstructor.js');
+
+let connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'root',
     database: 'bamazon_db'
 });
 
-connection.connect();
+connection.connect(function (err) {
+    if (err) {
+        throw err;
+    }
 
-connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-    if (error) throw error;
-    console.log('The solution is: ', results[0].solution);
 });
 
-connection.query('SELECT item_id, product_name, price FROM `products`', function (error, results, fields) {
-    // error will be an Error if one occurred during the query
-    console.log(error);
-    // results will contain the results of the query
-        console.log(results);
-    
-  });
-connection.end(); */
+// Display the products database using a table 
+// Then prompt to pick item
+function inventoryDisplay() {
+    let display = new displayTable();
+    connection.query('SELECT item_id, product_name, department_name, price, stock_quantity from products;', function (err, results) {
+        display.displayInvTable(results);
+        startApp();
+    });
+}
 
-inquirer.prompt([
-    {
-        name: "inventory",
+function startApp() {
+    console.log('\n  ');
+    inquirer.prompt([
+        {
+            name: "id",
+            type: "input",
+            message: "Please Select The ID Of The The Item You Would like To Purchase?",
+
+        },
+        {
+            name: 'quantity',
+            type: 'input',
+            message: 'How Many Would You Like To Purchase?',
+            validate: function (value) {
+                if (isNaN(value) === false) {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+    ]).then(function (answer) {
+        connection.query('SELECT product_name, department_name, price, stock_quantity FROM products WHERE ?', { item_id: answer.id }, function (err, res) {
+
+            console.log('\n  You would like to buy ' + answer.quantity + ' ' + res[0].product_name + ' ' + res[0].department_name + ' at $' + res[0].price + ' each'
+            );
+            if (res[0].stock_quantity >= answer.quantity) {
+                //If enough inventory to complete order, process order by updating database inventory and notifying customer that order is complete. 
+                var itemQuantity = res[0].stock_quantity - answer.quantity;
+                connection.query("UPDATE products SET ? WHERE ?", [
+                    {
+                        stock_quantity: itemQuantity
+                    }, {
+                        item_id: answer.id
+                    }], function (err, res) {
+                    });
+                let cost = res[0].price * answer.quantity;
+                console.log('\n  Order fulfilled! Your cost is $' + cost.toFixed(2) + '\n');
+                
+                // Order completed
+                userPrompt();
+
+            } else {
+                
+                //If not enought inventory notify customer and prompt customer for desire to shop more
+                console.log('\n  Sorry, Insufficient quantity to fulfill your order!\n');
+                
+                // Order not completed
+                userPrompt();
+            }
+        })
+    });
+}
+
+function userPrompt() {
+    inquirer.prompt({
+        name: "action",
         type: "list",
-        message: "Please Select an Item To Purchase From Our Store?",
-        choices: ["Item 1 - PlayStation 4 - Price: 300", "Item-2 Call Of Duty - Price: 50", "Item-3 Ice Cream Maker - Price: 100", "Item-4 Pasta Maker - Price: 40", "Item-5 Cat Litter - Price: 20", 'Item-6 Pet Leash - Price: 10', 'Item-7 Sectional Sofa - Price: 1500', 'Item-8 Recliner Chair - Price: 700', 'Item-9 Lenovo Laptop - Price: 650', 'Item-10 Blank CDs - Price: 10']
-    },
-    {
-        name: 'quantity',
-        type: 'input',
-        message: 'How Many Would You Like To Purchase?'
-    }
-    
-]).then(answers => {
-    //check the item
-    // is there enough in quantity to satisfy the order?
-    //yes - give total cost quantity * price
-    //yes - subtract purchased amoutn from db
-    //no - alert - "Insufficiant Quantity"
-    //no - select an item from our store (restart)
-}); 
+
+        message: " Would like to continue shopping?\n",
+        choices: ["Yes", "No"]
+    }).then(function (answer) {
+        switch (answer.action) {
+            case 'Yes':
+                inventoryDisplay();
+                break;
+
+            case 'No':
+                connection.end();
+                break;
+        }
+    })
+};
+
+// Start app by Prompting the customer
+userPrompt();
+
+
+
+
+
+
+
+
+
+
+
+
+
+

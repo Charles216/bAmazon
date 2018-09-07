@@ -36,5 +36,9 @@
  
  # Technologies/Packages used
  
- * Node.JS  * Inquirer NPM  * Cli-Table2 NPM  *mySQL  *mySQL NPM
+ * Node.JS  
+ * mySQL
+ * Inquirer NPM  
+ * Cli-Table2 NPM  
+ * mySQL NPM
  

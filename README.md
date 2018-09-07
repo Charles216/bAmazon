@@ -12,7 +12,7 @@
  
  * When the program is run the user must answer 'YES' when asked if they would like to continue shopping. Once the user selects 'YES' a table with our inventory is presented to the user. 
  
- ![](images/image%20(1).png)
+![](images/image%20(1).png)
  
  * The data from the mySQL database shows the same information as the tables does. The only difference is, the table does not show the user the stock quantity. This database will update as users shop.
   

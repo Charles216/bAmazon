@@ -9,7 +9,7 @@ var displayTable = require('./tableConstructor.js');
 let connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: 'your password',
     database: 'bamazon_db'
 });
 
